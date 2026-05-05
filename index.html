@@ -1093,17 +1093,18 @@ const cardDetail = {
     desc: "未知<br>咪~如果你要绿色牌，<br>石墙上有银色爪，一盏小灯旁边照。" 
     }
 };
+// 修正后的 bCardMap，对齐 unoDeck 的生成规则和图片文件名[cite: 1, 2]
 const bCardMap = {
-    "b1": "green-6",
-    "b2": "yellow-4",
-    "b3": "green-3",
-    "b4": "red-2",
+    "b1": "green-16",  // 修正[cite: 1]
+    "b2": "yellow-28", // 修正[cite: 1]
+    "b3": "green-15",  // 修正[cite: 1]
+    "b4": "red-02",    // 修正，带前导0[cite: 1]
     "b5": "wild",
-    "b6": "red-1",
-    "b7": "blue-7",
-    "b8": "blue-9",
-    "b9": "green-5",
-    "b10": "yellow-0"
+    "b6": "red-01",    // 修正，带前导0[cite: 1]
+    "b7": "blue-42",   // 修正[cite: 1]
+    "b8": "blue-44",   // 修正[cite: 1]
+    "b9": "green-18",  // 修正[cite: 1]
+    "b10": "yellow-25" // 修正[cite: 1]
 };
 const unoDeck = [
     ...Array.from({length:10}, (_,i)=>`red-${String(i+1).padStart(2, '0')}`),
