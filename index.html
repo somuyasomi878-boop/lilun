@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <title>Givemefour</title>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+ * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: sans-serif;
+}
+html, body {
+    width: 100%;
+    height: 100%;
+    background: url(images/bg.png) no-repeat center center;
+    background-size: cover;
+}
+/* 清理后：干净、正确、不冲突、背景正常显示 */
+.page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    background-color: transparent; /* 让页面透明，透出body背景 */
+    z-index: 10;
+}
+.page.active {
+    display: flex;
+}
+/* 声音开关 */
+    .sound-toggle {
+  position: fixed;
+  top: 15px;    /* 距离顶部15px */
+  left: 15px;   /* 距离左边15px */
+  width: 38px;  /* 按钮大小 */
+  height: 38px;
+  z-index: 9999; /* 层级最高，不会被任何东西挡住 */
+  cursor: pointer;
+}
+      
+.sound-toggle img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* 保持图片比例不变形 */
+}
+
+        
+    /* 登录页 */
+#loginPage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto; /* 👈 键盘弹出自动抬升 关键 */
+}
+
+#loginPage input {
+  padding: 12px 16px;
+  border: 0; /* 去掉边框，用你的背景图 */
+  border-radius: 8px;
+  font-size: 1rem;
+  width: 220px;
+  background: transparent;
+  outline: none;
+  text-align: center;
+  position: absolute;
+  top: 54%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 11;
+}
+
+/* 旧按钮样式隐藏（你之前系统自带的） */
+#loginPage button {
+  display: none !important;
+}
+
+.paw-image {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  height: auto;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.login-page {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+}
+
+.input-box {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.input-box img {
+  width: 280px;
+  display: block;
+  margin: 0 auto;
+}
+
+.start-btn {
+  background:  #c3dddc;
+  color: white;
+  padding: 12px 30px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 10;
+  position: relative;
+}
+ /* ===================== 规则页===================== */
+/* 规则弹窗 专属样式 */
+#rulePage {
+  display: none;          /* 启用 Flex 布局 */
+  align-items: center;    /* 垂直居中 */
+  justify-content: center; /* 水平居中 */
+  width: 100vw;
+  height: 100vh;
+}
+        .rule-modal {
+  width: calc(100% - 40px);  /* 左右各空20px */
+  position: relative;
+ max-width: 400px;
+  position: relative;
+  /* 加这一句：限制层级，不让被底层装饰盖住 */
+  z-index: 100;
+}
+.rule-modal img {
+  width: 100%;
+  display: block;
+}
+/* 进入游戏按钮：相对弹窗底部居中、圆角 */
+.rule-modal .enter-game-btn {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 30px;
+  border: none;
+  padding: 10px 25px;
+  background: #c3dddc;
+  cursor: pointer;
+  /* 关键补充：拉高按钮内部层级，能点击 */
+  z-index: 105;
+}
+#rulePage.active {
+  display: flex;
+}        
+
+        /* ===================== UNO 游戏界面 ===================== */
+        /* 顶部：出牌区 */
+       /* ===================== UNO 游戏界面（百分比版） ===================== */
+/* 顶部：出牌区 36% */
+.game-system-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 36%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: url(images/system.png) no-repeat center center;
+    background-size: contain;
+}
+        .system-card-box {
+    width: 100px;
+    height: 150px;
+    border-radius: 14px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    background-size: cover;
+    background-position: center;
+    background-color: #fff;
+}
+
+.game-tip {
+    /* 👇 改成绝对定位，贴在手牌区底部 */
+    position: absolute;
+    bottom: 50px; /* 离底部 20px，离按键区刚好一点距离 */
+    left: 20px; /* 左边距 20px，和你设计图一样 */
+    font-size: 17px;
+    font-weight: bold;
+    color: #222;
+    text-align: left; /* 文字左对齐 */
+}
+
+/* 中部：手牌区 54% */
+/* 1. 父容器：只负责定位置，不负责居中 */
+/* 1. 父容器：保留 flex，给子元素一个正确的环境 */
+.game-hand-area {
+    position: absolute;
+    top: 36%;
+    left: 0;
+    width: 100%;
+    height: 54%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 2. 中间容器：作为手牌的定位基准 */
+#playerHand {
+    width: 100%;
+    max-width: 400px; /* 限制扇形最大宽度，防止超出 */
+    height: 100%;
+    position: relative;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+        .hand-row {
+  position: absolute;
+  width: 100%;
+  height: 150px;
+  /* 你已经有的代码不动，只加下面这一行 */
+  transform: translateY(0);
+}
+/* 3. 手牌行：水平居中的正确写法 */
+#playerHand .card {
+    width: 94.6px;
+    height: 148.5px;
+    border-radius: 10px;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    background-size: cover;
+    background-position: center;
+    background-color: #fff;
+    
+    /* 核心修改：全部叠在父容器的中点 */
+    position: absolute;
+    left: 50%;
+    margin-left: -47.3px; /* 宽度的一半，确保中心对齐 */
+    
+    /* 旋转基点设为卡片下方较远的位置，产生大扇形效果 */
+    transform-origin: center 200%; 
+    transition: all 0.3s ease;
+    z-index: 1;
+}
+        
+#playerHand .card.playable { 
+    cursor: pointer;
+    box-shadow: 0 0 12px 4px #ffd76b;
+    transform: scale(1.08);
+    z-index: 1;
+}
+
+/* 底部底图 */
+#bottomDecor {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 30%;
+    background: url(images/bottom.png) no-repeat center bottom;
+    background-size: 100% 100%;
+    z-index: 0;
+    pointer-events: none;
+    display: none;
+}
+
+#gamePage.active ~ #bottomDecor {
+    display: block;
+}
+
+/* ------------------------------ */
+
+.touch-btn.rule { left: 3%; }
+.touch-btn.restart { left: 27%; }
+.touch-btn.contact { left: 51%; }
+.touch-btn.bag { left: 75%; }
+        /* 游戏内 查看规则弹窗（独立样式，不影响规则页） */
+.modal-rule {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.3);
+  display: none;
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+}
+.modal-rule.show {
+  display: flex;
+}
+
+.modal-rule .modal-content {
+  position: relative;
+  width: calc(100% - 40px);
+  max-width: 500px;
+  z-index: 1000;
+   margin-top: -30px;
+}
+.modal-rule img {
+  width: 100%;
+  display: block;
+}
+
+.modal-rule .close-rule-btn {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 30px;
+  border: none;
+  padding: 10px 25px;
+  background: #c3dddc;
+  cursor: pointer;
+  z-index: 1001;
+}
+    /* 游戏内 查看联系弹窗（独立样式，不影响规则页） */
+   .modal-contact {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.3);
+  display: none;
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+}
+.modal-contact.show {
+  display: flex;
+}
+
+.modal-contact .modal-content {
+  position: relative;
+  width: calc(100% - 80px);
+  max-width: 400px;
+  z-index: 1000;
+}
+.modal-contact img {
+  width: 100%;
+  display: block;
+} 
+.modal-rule .close-rule-btn {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 30px;
+  border: none;
+  padding: 10px 25px;
+  background: #c3dddc;
+  cursor: pointer;
+  z-index: 1001;
+}
+   .modal-contact {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.7);
+  display: none;
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+}
+.modal-contact.show {
+  display: flex;
+}
+
+.modal-contact .modal-content {
+  position: relative;
+  width: calc(100% - 100px);
+  max-width: 300px;
+  z-index: 1000;
+}
+.modal-contact img {
+  width: 100%;
+  display: block;
+}     
+        .modal-contact .close-contact {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 30px;
+  border: none;
+  padding: 10px 25px;
+  background: #c3dddc;
+  cursor: pointer;
+  z-index: 1001;
+}
+        
+
+        /* 背包页 */
+#bagPage {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: url(images/bagpagebg.png) no-repeat center center;
+    background-size: cover;
+    overflow: hidden; /* 防止背景图出现滚动条 */
+}
+
+/* 核心区域：距离顶端20%，底端10% */
+.bag-content-wrapper {
+    position: absolute;
+    top: 22%;
+    bottom: 10%;
+    left: 5%;  /* 留点左右边距 */
+    right: 5%;
+    
+    overflow-y: auto; /* 卡片多了可以上下滚动 */
+    padding: 10px;
+    /* 如果想让这个区域变透明或有底色，可以在这加 background */
+}
+
+.bag-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 每排3个 */
+    gap: 15px; /* 卡片之间的间距 */
+}
+
+.bag-item {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.8); /* 让卡片有个浅色底色 */
+    border-radius: 8px;
+    padding: 5px;
+}
+
+.bag-item img {
+    width: 100%;
+    height: auto; /* 保持比例 */
+    aspect-ratio: 2/3; /* 统一卡片比例 */
+    object-fit: contain;
+    display: block;
+}
+        /* 背包页 左下角 返回图标（无背景、纯箭头） */
+.back-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 999;
+    background: transparent !important;
+    border: none !important;
+    font-size: 30px;
+    font-weight: bold;  /* 👈 加粗 */
+    color: #779e9b;     /* 👈 你要的颜色 */
+    cursor: pointer;
+    padding: 0;
+}
+
+        /* 背包页 左下角 返回图标（无背景、纯箭头） */
+.back-btn {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    z-index: 999;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+
+    /* 👇 新样式 白色文字 + 圆角背景 */
+    color: #fff;
+    background: #c3dddc !important;
+    border: none !important;
+    border-radius: 12px; /* 圆角大小 */
+    padding: 8px 10px;   /* 按钮大小 */
+}
+
+        /* NFC 弹窗 */
+        .image-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.3s;
+        }
+        .image-popup.show {
+            visibility: visible;
+            opacity: 1;
+        }
+        .popup-box {
+            background: #fff;
+            padding: 20px;
+            border-radius: 16px;
+            max-width: 90%;
+            text-align: center;
+             position: relative;
+        }
+        .popup-img {
+            max-width: 100%;
+            max-height: 70vh;
+            margin-bottom: 15px;
+        }
+        /* NFC 弹窗文字样式美化 */
+#popupDesc {
+  font-size: 13px;         /* 文字大小 */
+  line-height: 1.6;        /* 行间距（让换行不挤） */
+  color: #333;             /* 文字颜色 */
+  text-align: center;      /* 居中 */
+  padding: 10px 15px;     /* 内边距 */
+  font-weight: 500;        /* 粗细 */
+}
+
+/* 标题名字（王文虎、眼镜、足球…）单独加大 */
+#popupDesc::first-line {
+  font-size: 20px !important;
+  font-weight: bold !important;
+  color: #779e9b !important;
+}
+        /* 弹窗按钮 - 和返回按钮同款样式 */
+        .popup-btn-wrap {
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* 两个按钮之间的间距 */
+    z-index: 999;
+}
+.popup-btn {
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #fff;
+    background: #c3dddc !important;
+    border: none !important;
+    border-radius: 12px;
+    padding: 8px 16px;
+}
+
+        /* 背包详情弹窗 */
+        .bag-detail-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.3s;
+        }
+        .bag-detail-popup.show {
+            visibility: visible;
+            opacity: 1;
+        }
+        .detail-box {
+            background: #fff;
+            width: 85%;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+        .bag-detail-popup.show .detail-box {
+    transform: scale(1);
+}
+        .detail-img {
+            width: 100%;
+            max-width: 300px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        .detail-desc {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        /* 通关主弹窗 */
+.win-main-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+.win-main-popup.show {
+    display: flex;
+}
+
+/* 弹窗盒子：和图片一样大 + 内容垂直居中 */
+.win-main-box {
+    position: relative;
+    width: 85%;
+    max-width: 380px;
+    aspect-ratio: 3 / 4;
+    background:transparent;
+    border-radius: 20px;
+    background-image: url("images/uno.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+    padding-bottom: 100px; 
+}
+
+/* 标题居中 */
+.win-main-box h2 {
+    font-size: 24px;
+    margin: 0;
+    width: 100%;
+    position: absolute;
+    top: 55%;
+    left: 50%; /* 👈 把原来的 left:0 改成 left:50% */
+    transform: translateX(-50%); /* 👈 加上这一行 */
+    text-align: center;
+}
+/* 文字垂直水平居中 */
+.win-main-box p {
+    font-size: 16px;
+    margin: 0;
+    padding: 0 10px;
+    text-align: center;
+    width: 100%;
+    position: absolute;
+    top: 65%;
+    left: 0;
+}
+
+/* 👇 100% 保留你要的按钮样式！只改可见位置 */
+.popup-btn-wrap {
+    position: absolute;
+    bottom:20px; /* 改成正数，按钮就能看见！ */
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    z-index: 999;
+}
+.popup-btn {
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #fff;
+    background: #c3dddc !important;
+    border: none !important;
+    border-radius: 12px;
+    padding: 8px 16px;
+}
+
+        /* 分享图片弹窗 */
+        .share-win-popup {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999999;
+        }
+        .share-win-popup.show {
+            display: flex;
+        }
+        .share-card {
+            width: 90%;
+            max-width: 380px;
+            position: relative;
+        }
+        .share-card img {
+            width: 100%;
+            border-radius: 16px;
+        }
+        .share-text {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #333;
+            font-size: 16px;
+            line-height: 1.6;
+            text-align: right;
+            white-space: nowrap;
+        }
+        /* 分享弹窗按钮样式（和胜利弹窗一样） */
+.share-btn-wrap {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 15px;
+    z-index: 999;
+}
+.share-btn {
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #fff;
+    background: #c3dddc !important;
+    border: none !important;
+    border-radius: 12px;
+    padding: 8px 16px;
+   
+}
+        .touch-btn {
+    position: fixed;
+    bottom: 2%;
+    width: 22%;
+    height: 8%;
+    z-index: 999;
+    background: transparent;
+}
+
+    </style>
+</head>
+<body>
+
+<!-- ===================== 页面 ===================== -->
+ <!-- 声音开关（除背包页外全部显示） -->
+  <div class="sound-toggle">
+    <img src="images/sound.png" class="sound-on">
+    <img src="images/mute.png" class="sound-off" style="display:none;">
+  </div>
+
+  <!-- 背景音乐 -->
+ <audio id="bgm" loop src="bgm.mp3"></audio>
+
+<!-- ====================================================== -->
+
+    <!-- 登录页 -->
+<div id="loginPage" class="page">
+  <div class="login-page">
+    <img src="images/paw.png" class="paw-image">
+    <div class="input-box">
+      <img src="images/loginframe1.png">
+      <!-- 这里改成 username -->
+      <input type="text" id="username" placeholder="输入昵称">
+    </div>
+
+    <div class="start-btn" onclick="goToRule()">开始</div>
+  </div>
+</div>
+
+<!-- 规则页 -->
+<div id="rulePage" class="page">
+    <div class="modal-content rule-modal">
+      <img src="images/rule.png">
+      <!-- 这里改成 startGame() -->
+      <button class="enter-game-btn" onclick="startGame()">进入游戏</button>
+    </div>
+  </div>
+</div>
+
+<!-- 游戏对战页 -->
+<div id="gamePage" class="page">
+    <div class="game-system-area">
+        <div id="systemCard" class="system-card-box"></div>
+    </div>
+    <div class="game-hand-area">
+        <div id="playerHand"></div>
+        <div class="game-tip" id="gameTip">请寻找爪印“击掌”吧！</div>
+    </div>
+
+    <div class="touch-btn rule" onclick="openRule()"></div>
+    <div class="touch-btn restart" onclick="restart()"></div>
+    <div class="touch-btn contact" onclick="openContact('联系我们')"></div>
+    <div class="touch-btn bag" onclick="showPage('bagPage')"></div>
+</div>
+
+<!-- 背包页 -->
+<div id="bagPage" class="page">
+    <button class="back-btn" onclick="showPage('gamePage')">↩</button>
+    
+    <!-- 卡片显示区域容器 -->
+    <div class="bag-content-wrapper">
+        <div class="bag-grid" id="bagList"></div>
+    </div>
+</div>
+<!-- ===================== 底部装饰（放这里就能显示！） ===================== -->
+<div id="gameBg"></div>
+<div id="bottomDecor"></div>
+<div id="bottomLayer1"></div>
+<div id="bagMask"></div>
+
+<!-- ===================== 弹窗（放最后） ===================== -->
+<!-- NFC 扫描后的弹窗 -->
+<div class="image-popup" id="imagePopup">
+    <div class="popup-box">
+        <!-- 这里对应 openImagePopup 里的路径 -->
+         <div id="popupImgContainer"></div>
+
+        <!-- 描述文字 -->
+        <p id="popupDesc" style="text-align:center; margin:10px 0;"></p>
+
+
+        <div class="popup-btn-bottom">
+            <button class="popup-btn" onclick="closeImagePopup()">返回游戏</button>
+            <button class="popup-btn" onclick="goToBagFromPopup()">放进背包</button>
+        </div>
+    </div>
+</div>
+
+<div class="image-popup" id="ownedPopup">
+    <div class="popup-box">
+        <h3>已拥有此卡片</h3>
+        <br>
+        <button class="popup-btn" onclick="closeOwnedPopup()">确定</button>
+    </div>
+</div>
+
+<div class="bag-detail-popup" id="bagDetailPopup">
+    <div class="detail-box">
+        <img class="detail-img" id="detailImg">
+        <p class="detail-desc" id="detailDesc"></p>
+        <button class="popup-btn" onclick="closeBagDetail()">关闭</button>
+    </div>
+</div>
+
+<div class="win-main-popup" id="winMainPopup">
+    <div class="win-main-box">
+        <h2>🎉 UNO 恭喜获得胜利！</h2>
+        <p id="winMainStats"></p>
+
+        <!-- 你的按钮 -->
+        <div class="popup-btn-wrap">
+            <div class="popup-btn" onclick="restartGame()">重新开始</div>
+            <div class="popup-btn" onclick="openSharePopup()">分享打卡</div>
+            <div class="popup-btn" onclick="closeWinMainPopup()">返回游戏</div>
+        </div>
+    </div>
+</div>
+
+<div class="share-win-popup" id="shareWinPopup">
+    <!-- 截图只截这一块：背景 + 文字 -->
+    <div class="share-card">
+        <img src="images/share-bg.jpg">
+        <div class="share-text" id="shareText"></div>
+    </div>
+
+    <!-- 按钮放到 share-card 外面下方，永远不被截图 -->
+    <div class="share-btn-wrap">
+        <button class="share-btn" onclick="saveShareImage()">保存打卡图片</button>
+        <button class="share-btn" onclick="closeSharePopup()">关闭</button>
+    </div>
+</div>
+    <!-- 规则弹窗 -->
+<div class="modal modal-rule">
+  <div class="modal-content">
+    <img src="images/rule.png">
+    <button class="close-rule-btn" onclick="closeRule()">返回</button>
+  </div>
+</div>
+
+
+<!-- 联系弹窗 -->
+<div class="modal modal-contact">
+  <div class="modal-content">
+    <img src="images/contact.jpg">
+    <button class="close-contact" onclick="closeContact()">返回</button>
+  </div>
+</div>
+
+</body>
+<script>
+// ===================== 弹窗方法 =====================
+
+    let systemDraw2Count = 0;   // 统计系统出了几张 draw2
+let maxDraw2Limit = 2;       // 系统最多出 3 张 draw2（你可以改数字）
+// ==========================
+// 【图片预加载缓存】进入游戏前提前加载所有图片
+// ==========================
+function preloadAllImages() {
+  // 数组名改成 allAssets，和下面循环对应
+  const allAssets = [
+    // 扫描弹窗用的图片
+    "images/cat1.mp4",
+    "images/cat2.png",
+    "images/cat3.mp4",
+    "images/cat4.png",
+    "images/cat5.mp4",
+    "images/cat6.png",
+    "images/cat7.mp4",
+    "images/cat8.mp4",
+    "images/cat9.mp4",
+    "images/cat10.mp4",
+    "images/cat11.mp4",
+    "images/cat12.mp4",
+
+    // 背包显示用的图片
+    "images/cat1.jpg",
+    "images/cat2.jpg",
+    "images/cat3.jpg",
+    "images/cat4.jpg",
+    "images/cat5.jpg",
+    "images/cat6.jpg",
+    "images/cat7.jpg",
+    "images/cat8.jpg",
+    "images/cat9.jpg",
+    "images/cat10.jpg",
+    "images/cat11.jpg",
+    "images/cat12.jpg"
+  ];
+
+  // 循环用 allAssets，和上面数组对应
+  allAssets.forEach(url => {
+    if (url.endsWith('.mp4')) {
+      let video = document.createElement('video');
+      video.preload = 'auto';
+      video.muted = true;
+      video.src = url;
+      // 这三行是让视频“隐身”，不影响页面
+      video.style.position = 'fixed';
+      video.style.opacity = '0';
+      video.style.pointerEvents = 'none';
+      document.body.appendChild(video);
+    } else {
+      let img = new Image();
+      img.src = url;
+    }
+  });
+
+  console.log("✅ 所有游戏图片/视频已预加载完成");
+}
+
+
+// 保存手牌到本地
+function saveMyCards() {
+    localStorage.setItem('myCards', JSON.stringify(playerCards));
+}
+
+// 读取本地手牌（页面刷新自动恢复）
+function loadMyCards() {
+    let data = localStorage.getItem('myCards');
+    if (data) playerCards = JSON.parse(data);
+    renderPlayerCards(); // 你原来渲染手牌的函数
+}
+function openImagePopup(code) {
+    const data = cardDetail[code];
+    if (!data) return;
+
+    let url = data.scanImg;
+    let container = document.getElementById('popupImgContainer'); // 你需要一个容器
+    let popupDesc = document.getElementById('popupDesc');
+   
+let systemDraw2Max = 4;  
+
+    // 清空容器
+    container.innerHTML = '';
+
+    // 如果是视频
+    if (url.endsWith('.mp4')) {
+        let video = document.createElement('video');
+        video.src = url;
+        video.autoplay = true;
+        video.controls = false;
+        video.muted = true;
+        video.loop = true;
+        video.style.width = '100%';
+        video.style.height = 'auto';
+        container.appendChild(video);
+    } 
+    // 如果是图片
+    else {
+        let img = document.createElement('img');
+        img.src = url;
+        img.style.width = '100%';
+        container.appendChild(img);
+    }
+
+    // 显示描述
+    popupDesc.innerHTML = data.desc;
+
+    // 打开弹窗
+    document.getElementById('imagePopup').classList.add('show');
+}
+function closeImagePopup() {
+    document.getElementById('imagePopup').classList.remove('show');
+}
+function openOwnedPopup() {
+    document.getElementById('ownedPopup').classList.add('show');
+}
+function closeOwnedPopup() {
+    document.getElementById('ownedPopup').classList.remove('show');
+}
+function openBagDetail(imgSrc, desc) {
+    document.getElementById('detailImg').src = imgSrc;
+    document.getElementById('detailDesc').style.display = 'block'; 
+    document.getElementById('bagDetailPopup').classList.add('show');
+}
+function closeBagDetail() {
+    document.getElementById('bagDetailPopup').classList.remove('show');
+}
+function openNfcPopup(code) {
+    // 调用 NFC 专属图片 + NFC 专属文字
+    const nfcData = picNfcMap[code];
+    
+    document.getElementById('detailImg').src = nfcData.src;
+    document.getElementById('detailDesc').innerText = nfcData.text;
+    document.getElementById('bagDetailPopup').classList.add('show');
+}
+
+// ===================== 配置 =====================
+const cardDetail = {
+    "a1": { 
+        scanImg: "images/cat1.mp4", 
+        bigImg: "images/cat1.jpg", 
+        desc: "王文虎<br>这条下坡走到头。<br>老树立在车群之间，斑驳树皮纹路交错。<br>粗糙纹理层层叠叠，某处被树皮轻轻遮掩。<br>纹理之下有惊喜，等你细心来发现。" 
+    },
+    "a2": { 
+        scanImg: "images/cat2.png", 
+        bigImg: "images/cat2.jpg", 
+        desc: "眼镜<br>绿意环抱的河畔树干，青苔留下了独特印记。<br>枯荣交织成自然纹理，斑驳的痕迹暗藏玄机。<br>满眼青绿就在眼前，认准颜色就能兑现。" 
+    },
+    "a3": { 
+        scanImg: "images/cat3.mp4", 
+        bigImg: "images/cat3.jpg", 
+        desc: "足球<br>绿色牌就在在绿色里。<br>万绿丛中一点棕，青草围起的小圆圈。<br>拨开草叶往里看，答案就在泥土间" 
+    },
+    "a4": { 
+        scanImg: "images/cat4.png", 
+        bigImg: "images/cat4.jpg", 
+        desc: "花妞<br>有条小径通向对岸，草木丛生绿意蔓延。<br>泥土之上草色零星，几块碎石半埋其间。<br>红色线索就在此间，认真查看就能发现。" 
+    },
+    "a5": { 
+        scanImg: "images/cat5.mp4", 
+        bigImg: "images/cat5.jpg", 
+        desc: "一条<br>你说蓝色牌？<br>我不知道啊，我可没藏，我只是回头看看" 
+    },
+    "a6": { 
+        scanImg: "images/cat6.png", 
+        bigImg: "images/cat6.jpg", 
+        desc: "裤衩子<br>想要黄色牌？<br>粗粝石面靠着草地，几片枯叶聚在一起。<br>它们拼成小小图案，贴在石块边沿之地。<br>几片落叶排列清，数清数目便分明。" 
+    },
+    "a7": { 
+        scanImg: "images/cat7.mp4", 
+        bigImg: "images/cat7.jpg", 
+        desc: "十一<br>石地中间一道白，蓝门边缘藏起来。<br>顺着漆痕仔细看，答案就在线边埋。" 
+    },
+    "a8": { 
+        scanImg: "images/cat8.mp4", 
+        bigImg: "images/cat8.jpg", 
+        desc: "小白猫<br>我只是路过一下~" 
+    },
+    "a9": { 
+        scanImg: "images/cat9.mp4", 
+        bigImg: "images/cat9.jpg", 
+        desc: "白眉<br>5号楼有玻璃门，绿色爪印按上去，<br>标记一个数字5，前后来回仔细寻。" 
+    },
+    "a10": { 
+        scanImg: "images/cat10.mp4", 
+        bigImg: "images/cat10.jpg", 
+        desc: "爱拉屎<br>呃呃 我在忙💩，去别处看看吧" 
+    },
+    "a11": { 
+        scanImg: "images/cat11.mp4", 
+        bigImg: "images/cat11.jpg", 
+        desc: "王文豹<br>一条长廊桥，这头到那头，<br>跨过小溪流，下面有个红方块，<br>光滑石面映绿意。" 
+    },
+    "a12": { 
+        scanImg: "images/cat12.mp4", 
+        bigImg: "images/cat12.jpg", 
+    desc: "未知<br>咪~如果你要绿色牌，<br>石墙上有银色爪，一盏小灯旁边照。" 
+    }
+};
+const bCardMap = {
+    "b1": "green-6",
+    "b2": "yellow-4",
+    "b3": "green-3",
+    "b4": "red-2",
+    "b5": "wild",
+    "b6": "red-1",
+    "b7": "blue-7",
+    "b8": "blue-9",
+    "b9": "green-5",
+    "b10": "yellow-0"
+};
+const unoDeck = [
+    ...Array.from({length:10}, (_,i)=>`red-${String(i+1).padStart(2, '0')}`),
+    ...Array.from({length:10}, (_,i)=>`yellow-${25+i}`),
+    ...Array.from({length:10}, (_,i)=>`green-${14+i}`),
+    ...Array.from({length:10}, (_,i)=>`blue-${36+i}`),
+    "yellow-draw2","red-draw2","green-draw2","blue-draw2",
+   "wild","wild4"
+];
+
+let currentNfcCode = "";
+let pendingNfcCode = "";
+let playerHand = [];
+let systemCard = null;
+let canPlay = true;
+
+// ===================== 2. 声音开关 =====================
+// 全局音乐，永远不被刷新重置
+// 保留你原来的 audio 标签，不改结构！！！
+const bgm = document.getElementById('bgm');
+bgm.loop = true; // 强制循环
+let isPlay = true;
+
+// 声音开关
+document.querySelector('.sound-toggle').onclick = () => {
+  isPlay = !isPlay;
+  if (isPlay) {
+    bgm.play();
+    document.querySelector('.sound-on').style.display = 'block';
+    document.querySelector('.sound-off').style.display = 'none';
+  } else {
+    bgm.pause();
+    document.querySelector('.sound-on').style.display = 'none';
+    document.querySelector('.sound-off').style.display = 'block';
+  }
+};
+
+// 点击页面自动播放（手机兼容）
+document.addEventListener('click', async () => {
+  try {
+    await bgm.play();
+  } catch (e) {}
+}, { once: true });
+function showPage(id) {
+    // 1. 获取所有带有 'page' 类的元素（即你的所有页面容器）
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    
+    // 2. 找到 id 对应的页面，并添加 'active' 类让它显示
+    document.getElementById(id).classList.add('active');
+    
+    // 3. 记录当前页面，方便下次登录直接跳转
+    localStorage.setItem("lastPage", id);
+}
+function goToRule() {
+  let name = document.getElementById("username").value.trim();
+  if (!name) return alert("请输入你的昵称");
+  localStorage.setItem("username", name);
+  localStorage.setItem("logined", "1");
+  showPage("rulePage");
+}
+function startGame() {
+    showPage('gamePage');
+    initPlayerHand();
+    if (!systemCard) systemPlayRandomCard();
+    if (pendingNfcCode) {
+        let temp = pendingNfcCode;
+        pendingNfcCode = "";
+        setTimeout(()=>scanNfc(temp),300);
+    }
+}
+function showRule(){
+    document.querySelector(".modal-rule").classList.add("show");
+}
+
+// ===================== 初始化手牌 =====================
+function initPlayerHand() {
+    let saved = localStorage.getItem("playerHand");
+    if (saved) {
+        playerHand = JSON.parse(saved);
+    } else {
+        playerHand = [];
+        let numberCards = unoDeck.filter(c => {
+            return !c.includes('wild') && !c.includes('draw2');
+        });
+        for (let i = 0; i < 6; i++) {
+            let r = Math.floor(Math.random() * numberCards.length);
+            playerHand.push(numberCards[r]);
+            numberCards.splice(r, 1);
+        }
+        playerHand.push("wild");
+        localStorage.setItem("playerHand", JSON.stringify(playerHand));
+    }
+    renderHand();
+}
+
+// ===================== 渲染手牌（两排扇形 + 居中） =====================
+// 渲染手牌（两排分开、不重叠扇形）
+function renderSingleRow(rowCards, container) {
+    const count = rowCards.length;
+    if (count === 0) return;
+
+    // --- 配置扇形参数 ---
+    const maxTotalSpread = 45; // 整个扇形展开的最大总角度
+    const angleStep = count > 1 ? Math.min(12, maxTotalSpread / (count - 1)) : 0; 
+    const startAngle = -((count - 1) * angleStep) / 2;
+
+    rowCards.forEach((code, idx) => {
+        let el = document.createElement("div");
+        el.className = "card";
+        el.id = `hand-card-${playerHand.indexOf(code)}`;
+        el.style.backgroundImage = `url(images/${code}.png)`;
+        el.onclick = () => playCard(playerHand.indexOf(code));
+
+        // 计算当前卡片的角度
+        const angle = startAngle + (idx * angleStep);
+        
+        // 记录角度供 CSS hover 使用
+        el.style.setProperty('--card-angle', `${angle}deg`);
+        
+        // 应用旋转：先 translateX(-50%) 居中，再 rotate 旋转
+        // 配合旋转基点 (transform-origin)，卡片会自动排列成弧形
+        el.style.transform = `translateX(0) rotate(${angle}deg)`;
+        
+        // 同一行里，越靠右的牌 z-index 越高
+        el.style.zIndex = idx;
+
+        if (isPlayable(code)) {
+            el.classList.add("playable");
+        }
+        container.appendChild(el);
+    });
+}
+
+function renderHand() {
+    let box = document.getElementById("playerHand");
+    box.innerHTML = "";
+    const total = playerHand.length;
+
+    let topRow = [], bottomRow = [];
+    // 自动分层逻辑
+    if (total >4) {
+        topRow = playerHand.slice(0, Math.floor(total/2));
+        bottomRow = playerHand.slice(Math.floor(total/2));
+    } else {
+        bottomRow = playerHand;
+    }
+
+    // 上层容器
+    const topContainer = document.createElement("div");
+    topContainer.className = "hand-row";
+    topContainer.style.width = "100%";
+    topContainer.style.top = "10%"; // 往上放一点
+    topContainer.style.left = "0";
+
+    // 下层容器
+    const bottomContainer = document.createElement("div");
+    bottomContainer.className = "hand-row";
+    bottomContainer.style.width = "100%";
+    bottomContainer.style.top = "30%"; // 往下放一点
+    bottomContainer.style.left = "0";
+
+    renderSingleRow(topRow, topContainer);
+    renderSingleRow(bottomRow, bottomContainer);
+
+    box.appendChild(topContainer);
+    box.appendChild(bottomContainer);
+}
+// ===================== 可出牌规则 =====================
+function isPlayable(card) {
+    if (!systemCard || !canPlay) return false;
+    let isAllowed = card.includes('wild') || /^(red|yellow|green|blue)-\d+$/.test(card);
+    if (!isAllowed) return false;
+    if (systemCard === "wild4") return true;
+
+    let sColor = getColor(systemCard);
+    let sNum = getNumber(systemCard);
+    let pColor = getColor(card);
+    let pNum = getNumber(card);
+
+    if (card.includes('wild')) return true;
+    return sColor === pColor || sNum === pNum;
+}
+
+function getColor(c) {
+    if (c.startsWith("red")) return "red";
+    if (c.startsWith("yellow")) return "yellow";
+    if (c.startsWith("green")) return "green";
+    if (c.startsWith("blue")) return "blue";
+    return "wild";
+}
+function getNumber(cardName) {
+    // 你的数字牌名格式是：颜色-序号.png，牌面数字在文件名的最后两位，比如 blue-43.png 牌面是7
+    // 这里我们用一个映射表，把你的序号和牌面数字对应起来，我先给你写几个示例，你可以按这个格式补全
+    const numberMap = {
+        // 黄色
+        "yellow-34": "9",
+        "yellow-33": "8",
+        "yellow-31": "6",
+        "yellow-32": "7",
+        "yellow-29": "4",
+        "yellow-30": "5",
+        "yellow-27": "2",
+        "yellow-28": "3",
+        "yellow-25": "0",
+        "yellow-26": "1",
+        // 蓝色
+        "blue-45": "9",
+        "blue-44": "8",
+        "blue-42": "6",
+        "blue-41": "5",
+        "blue-43": "7",
+        "blue-39": "3",
+        "blue-36": "0",
+        "blue-40": "4",
+        "blue-38": "2",
+        "blue-37": "1",
+        // 绿色
+        "green-23": "9",
+        "green-22": "8",
+        "green-20": "6",
+        "green-21": "7",
+        "green-18": "4",
+        "green-19": "5",
+        "green-17": "3",
+        "green-16": "2",
+        "green-15": "1",
+        "green-14": "0",
+        // 红色
+        "red-10": "9",
+        "red-09": "8",
+        "red-08": "7",
+        "red-07": "6",
+        "red-03": "2",
+        "red-06": "5",
+        "red-05": "4",
+        "red-02": "1",
+        "red-04": "3",
+        "red-01": "0"
+    };
+
+    // 去掉后缀.png
+    const key = cardName.replace(".png", "");
+    return numberMap[key] || "";
+}
+
+
+// ===================== 出牌动画（抬升 + 变速飞牌） =====================
+function playCard(idx) {
+    if (!canPlay) return;
+    let card = playerHand[idx];
+    if (!isPlayable(card)) return;
+
+    const el = document.getElementById(`hand-card-${idx}`);
+    const systemCardBox = document.getElementById("systemCard");
+    const cardRect = el.getBoundingClientRect();
+    const targetRect = systemCardBox.getBoundingClientRect();
+
+    el.style.transition = "transform 0.2s ease-out, box-shadow 0.2s ease-out";
+    el.style.transform = "translateY(-20px) scale(1.1)";
+    el.style.boxShadow = "0 0 15px 5px #ffd76b";
+
+    setTimeout(() => {
+        const moveX = targetRect.left + targetRect.width/2 - (cardRect.left + cardRect.width/2);
+        const moveY = targetRect.top - cardRect.top;
+
+        el.style.transition = "transform 0.4s cubic-bezier(0.1,0.8,0.3,1), opacity 0.4s ease";
+        el.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.2)`;
+        el.style.opacity = "0.9";
+
+        setTimeout(() => {
+            systemCard = card;
+            playerHand.splice(idx, 1);
+            localStorage.setItem("playerHand", JSON.stringify(playerHand));
+            canPlay = false;
+            renderSystemCard();
+            renderHand();
+            checkWin();
+        }, 400);
+    }, 200);
+}
+
+// ===================== 系统牌 & 胜利 =====================
+function renderSystemCard() {
+    let el = document.getElementById("systemCard");
+    el.style.backgroundImage = systemCard ? `url(images/${systemCard}.png)` : "";
+    el.style.opacity = canPlay ? "1" : "0.6";
+
+    if (!systemCard) {
+        document.getElementById("gameTip").innerText = "请寻找“爪印”击掌吧！";
+    } 
+    else if (systemCard.includes('wild4')) {
+        document.getElementById("gameTip").innerText = "NO!被加了四张，不过可以出任意牌";
+    } 
+    else if (systemCard.includes('draw2')) {
+        document.getElementById("gameTip").innerText = "捣蛋猫出没，你被加了两张牌";
+    } 
+    else if (!canPlay) {
+        document.getElementById("gameTip").innerText = "寻找下一个爪印吧";
+    } 
+    else {
+        let hasPlayable = playerHand.some(c => isPlayable(c));
+        document.getElementById("gameTip").innerText = hasPlayable 
+            ? "请选择可出的牌" 
+            : "没有可出牌，请继续寻找爪印";
+    }
+}
+
+function checkWin() {
+    if (playerHand.length === 0) {
+        setTimeout(() => {
+            let username = localStorage.getItem("username") || "玩家";
+            let usedNfcCount = JSON.parse(localStorage.getItem("nfcUsed") || "[]").length;
+            let bagCardCount = JSON.parse(localStorage.getItem("bag") || "[]").length;
+
+            // 👇 直接用 systemDraw2Count
+            document.getElementById("winMainStats").innerHTML = 
+                `<span style="color:#ff9900">${username}</span> 在中国美术学院，击掌<span style="color:#ff9900">${usedNfcCount}</span>次<br>
+收集到了<span style="color:#ff9900">${bagCardCount}</span>张小动物图鉴<br>
+你遇到了<span style="color:#ff9900">${systemDraw2Count}</span>只捣蛋猫`;
+
+            document.getElementById("winMainPopup").classList.add("show");
+        }, 500);
+    }
+}
+// 只保留这个！
+function closeWinMainPopup() {
+  document.getElementById("winMainPopup").classList.remove("show");
+}
+// 正确的分享弹窗（只保留一个！！！）
+function openSharePopup() {
+    let username = localStorage.getItem("username") || "探险家";
+    let usedNfcCount = JSON.parse(localStorage.getItem("nfcUsed") || "[]").length;
+    let bagCardCount = JSON.parse(localStorage.getItem("bag") || "[]").length;
+
+    // 显示文字
+    document.getElementById("shareText").innerHTML = 
+    `<span style="color:#ff9900">${username}</span><br>在中国美术学院<br>击掌<span style="color:#ff9900">${usedNfcCount}</span>次<br>
+收集<span style="color:#ff9900">${bagCardCount}</span>张小动物图鉴<br>
+遇到了<span style="color:#ff9900">${systemDraw2Count || 0}</span>只捣蛋猫`;
+
+    document.getElementById("shareWinPopup").classList.add("show");
+}
+
+// 关闭弹窗
+function closeSharePopup() {
+    document.getElementById("shareWinPopup").classList.remove("show");
+}
+
+// 保存图片（背景+文字，手机不崩）
+function saveShareImage() {
+    const target = document.querySelector(".share-card");
+
+    html2canvas(target, {
+        useCORS: true,
+        scale: 2,
+        backgroundColor: "#ffffff"
+    }).then(canvas => {
+        let a = document.createElement("a");
+        a.download = "UNO打卡.jpg";
+        a.href = canvas.toDataURL("image/jpeg", 1.0);
+        a.click();
+        alert("✅ 保存成功！");
+    }).catch(err => {
+        alert("❌ 保存失败，请重试");
+    });
+}
+function restartGame() {
+    localStorage.clear();
+    location.reload();
+}
+
+// ===================== 系统出牌（限制 +2 +4） =====================
+function systemPlayRandomCard() {
+    let cnt = playerHand.length;
+    let valid = unoDeck.filter(c => !c.includes('wild'));
+
+    // 限制 draw2 数量
+    if (systemDraw2Count < maxDraw2Limit) {
+        if (cnt <= 10) {
+            valid.push("yellow-draw2", "red-draw2", "green-draw2", "blue-draw2");
+        }
+    }
+
+    // 👇 这里直接删掉 wild4，电脑永远不会出+4
+    // if (cnt <= 8) {
+    //     valid.push("wild4");
+    // }
+
+    // 核心逻辑：抽牌
+    systemCard = valid[Math.floor(Math.random() * valid.length)];
+    canPlay = true;
+    renderSystemCard();
+    renderHand();
+
+    // 计数 + 抽牌
+    if (systemCard.includes('draw2')) {
+         playerDrawCards(2);
+        systemDraw2Count++;
+        const tipEl = document.getElementById("gameTip");
+        if (tipEl) {
+            tipEl.innerText = "捣蛋猫出没，你被加了两张牌";
+        }
+    }
+
+    // 👇 这里也一起注释/删掉，防止万一
+    // if (systemCard === "wild4") {
+    //     playerDrawCards(4);
+    // }
+}
+
+function systemPlaySpecifiedCard(code) {
+    if (!bCardMap[code]) return;
+    systemCard = bCardMap[code];
+    canPlay = true;
+    renderSystemCard();
+    renderHand();
+    if (systemCard.includes('draw2')) {
+        playerDrawCards(2);
+        systemDraw2Count++; // 捣蛋猫 +1
+      const tipEl = document.getElementById("gameTip");
+if (tipEl) {
+    tipEl.innerText = "捣蛋猫出没，你被加了两张牌";
+}
+    }
+}
+
+// ===================== 抽牌（上限12张） =====================
+function playerDrawCards(n) {
+    let pool = unoDeck.filter(c => !c.includes('wild') && !c.includes('draw2') && c !== "wild4");
+    for (let i=0; i<n; i++) {
+        if (playerHand.length >=12) break;
+        let r = Math.floor(Math.random() * pool.length);
+        playerHand.push(pool[r]);
+        pool.splice(r,1);
+    }
+    localStorage.setItem("playerHand", JSON.stringify(playerHand));
+    renderHand();
+}
+
+// ===================== 背包 =====================
+function renderBag() {
+    let bag = JSON.parse(localStorage.getItem('bag') || '[]');
+    let box = document.getElementById('bagList');
+    box.innerHTML = '';
+    bag.forEach(code => {
+        const data = cardDetail[code];
+        if (data) {
+            box.innerHTML += `
+            <div class="bag-item" onclick="openBagDetail('${data.bigImg}','${data.desc}')">
+                <img src="${data.bigImg}"> 
+            </div>`;
+        }
+    });
+}
+function addCardToBag(code) {
+    let bag = JSON.parse(localStorage.getItem('bag') || '[]');
+    if (!bag.includes(code)) {
+        bag.push(code);
+        localStorage.setItem('bag', JSON.stringify(bag));
+    }
+}
+function goToBagFromPopup() {
+    addCardToBag(currentNfcCode);
+    closeImagePopup();
+    showPage('bagPage');
+    renderBag();
+}
+  // 直接回到收藏夹（背包）
+
+// ===================== NFC =====================
+function isNfcUsed(code) {
+    let used = JSON.parse(localStorage.getItem('nfcUsed') || '[]');
+    return used.includes(code);
+}
+function markNfcUsed(code) {
+    let used = JSON.parse(localStorage.getItem('nfcUsed') || '[]');
+    if (!used.includes(code)) {
+        used.push(code);
+        localStorage.setItem('nfcUsed', JSON.stringify(used));
+    }
+}
+
+function scanNfc(code) {
+    code = code.toLowerCase().trim().replace("#", "");
+    currentNfcCode = code;
+    if (!localStorage.getItem("logined")) { pendingNfcCode = code; showPage("loginPage"); return; }
+    if (!document.getElementById("gamePage").classList.contains("active")) { pendingNfcCode = code; showPage("gamePage"); return; }
+
+    if (!isNaN(parseInt(code))) {
+        if (isNfcUsed(code)) { alert("已经击过掌了，请寻找下一个爪印"); return; }
+        markNfcUsed(code); systemPlayRandomCard(); return;
+    }
+    if (code.startsWith("b")) {
+        if (isNfcUsed(code)) { alert("已经击过掌了，请寻找下一个爪印"); return; }
+        markNfcUsed(code); systemPlaySpecifiedCard(code); return;
+    }
+    if (code.startsWith("a")) {
+        if (isNfcUsed(code)) { openOwnedPopup(); return; }
+        
+        if (cardDetail[code]) { 
+            markNfcUsed(code); 
+            // 传入整个 code，让弹窗函数去查找 scanImg
+            openImagePopup(code); 
+        } else {
+            alert("无效卡片");
+        }
+        return;
+    }
+    alert("无效NFC");
+}
+
+    // 规则弹窗
+function openRule() {
+  document.querySelector(".modal-rule").classList.add("show");
+}
+function closeRule() {
+  document.querySelector(".modal-rule").classList.remove("show");
+}
+
+// 重新开始弹窗
+function openRestart() {
+  document.querySelector(".modal-restart").classList.add("show");
+}
+function closeRestart() {
+  document.querySelector(".modal-restart").classList.remove("show");
+}
+
+// 联系弹窗
+function openContact() {
+  document.querySelector(".modal-contact").classList.add("show");
+}
+function closeContact() {
+  document.querySelector(".modal-contact").classList.remove("show");
+}
+
+// 确认重新开始
+const btn = document.querySelector(".confirm-restart");
+if (btn) {
+  btn.onclick = function () {
+    localStorage.clear();
+    location.reload();
+  };
+}
+
+function restart() {
+    if (!confirm('确定重新开始？')) return;
+    localStorage.clear();
+    location.reload();
+}
+window.addEventListener("hashchange", ()=>{
+    let hash = window.location.hash.substring(1).trim().toLowerCase();
+    if (hash) scanNfc(hash);
+});
+// 打开页面自动恢复手牌
+window.onload = function() {
+    loadMyCards();
+}
+window.onload = () => {
+    renderBag();
+    let logined = localStorage.getItem("logined");
+    let lastPage = localStorage.getItem("lastPage");
+
+    // 核心修复：确保一定能显示一个页面
+    if (logined) {
+           preloadAllImages();
+
+        // 已登录：去上次页面
+        showPage(lastPage || "gamePage");
+        if (lastPage === "gamePage") initPlayerHand();
+    } else {
+        // 未登录：强制显示登录页
+        showPage("loginPage");
+    }
+
+    // NFC 逻辑不动
+    setTimeout(() => {
+        let hash = window.location.hash.substring(1).trim().toLowerCase();
+        if (hash) scanNfc(hash);
+    }, 150);
+};
+</script>
+</body>
+</html>
