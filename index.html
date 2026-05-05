@@ -1093,18 +1093,59 @@ const cardDetail = {
     desc: "未知<br>咪~如果你要绿色牌，<br>石墙上有银色爪，一盏小灯旁边照。" 
     }
 };
-// 修正后的 bCardMap，对齐 unoDeck 的生成规则和图片文件名[cite: 1, 2]
+// ===================== B开头牌 核心映射（严格匹配你的 unoDeck 牌库） =====================
 const bCardMap = {
-    "b1": "green-16",  // 修正[cite: 1]
-    "b2": "yellow-28", // 修正[cite: 1]
-    "b3": "green-15",  // 修正[cite: 1]
-    "b4": "red-02",    // 修正，带前导0[cite: 1]
-    "b5": "wild",
-    "b6": "red-01",    // 修正，带前导0[cite: 1]
-    "b7": "blue-42",   // 修正[cite: 1]
-    "b8": "blue-44",   // 修正[cite: 1]
-    "b9": "green-18",  // 修正[cite: 1]
-    "b10": "yellow-25" // 修正[cite: 1]
+    "b1": "red-01",
+    "b2": "red-02",
+    "b3": "red-03",
+    "b4": "red-04",
+    "b5": "red-05",
+    "b6": "red-06",
+    "b7": "red-07",
+    "b8": "red-08",
+    "b9": "red-09",
+    "b10": "red-10",
+
+    "b11": "yellow-25",
+    "b12": "yellow-26",
+    "b13": "yellow-27",
+    "b14": "yellow-28",
+    "b15": "yellow-29",
+    "b16": "yellow-30",
+    "b17": "yellow-31",
+    "b18": "yellow-32",
+    "b19": "yellow-33",
+    "b20": "yellow-34",
+
+    "b21": "green-14",
+    "b22": "green-15",
+    "b23": "green-16",
+    "b24": "green-17",
+    "b25": "green-18",
+    "b26": "green-19",
+    "b27": "green-20",
+    "b28": "green-21",
+    "b29": "green-22",
+    "b30": "green-23",
+
+    "b31": "blue-36",
+    "b32": "blue-37",
+    "b33": "blue-38",
+    "b34": "blue-39",
+    "b35": "blue-40",
+    "b36": "blue-41",
+    "b37": "blue-42",
+    "b38": "blue-43",
+    "b39": "blue-44",
+    "b40": "blue-45",
+
+    // 功能牌 + 万能牌
+    "b41": "yellow-draw2",
+    "b42": "red-draw2",
+    "b43": "green-draw2",
+    "b44": "blue-draw2",
+    "b45": "wild",
+    "b46": "wild4"
 };
 const unoDeck = [
     ...Array.from({length:10}, (_,i)=>`red-${String(i+1).padStart(2, '0')}`),
