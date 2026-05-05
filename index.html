@@ -1093,8 +1093,19 @@ const cardDetail = {
     desc: "未知<br>咪~如果你要绿色牌，<br>石墙上有银色爪，一盏小灯旁边照。" 
     }
 };
-// ===================== B开头牌 核心映射（严格匹配你的 unoDeck 牌库） =====================
+// ===================== 1. 修正 bCardMap：和 unoDeck 100% 对齐 =====================
+const unoDeck = [
+    ...Array.from({length:10}, (_,i)=>`red-${String(i+1).padStart(2, '0')}`),
+    ...Array.from({length:10}, (_,i)=>`yellow-${25+i}`),
+    ...Array.from({length:10}, (_,i)=>`green-${14+i}`),
+    ...Array.from({length:10}, (_,i)=>`blue-${36+i}`),
+    "yellow-draw2","red-draw2","green-draw2","blue-draw2",
+    "wild","wild4"
+];
+
+// 严格按照 unoDeck 顺序映射，确保每个 b 开头的牌都对应正确的文件名
 const bCardMap = {
+    // 红牌 red-01 ~ red-10
     "b1": "red-01",
     "b2": "red-02",
     "b3": "red-03",
@@ -1106,6 +1117,7 @@ const bCardMap = {
     "b9": "red-09",
     "b10": "red-10",
 
+    // 黄牌 yellow-25 ~ yellow-34
     "b11": "yellow-25",
     "b12": "yellow-26",
     "b13": "yellow-27",
@@ -1117,6 +1129,7 @@ const bCardMap = {
     "b19": "yellow-33",
     "b20": "yellow-34",
 
+    // 绿牌 green-14 ~ green-23
     "b21": "green-14",
     "b22": "green-15",
     "b23": "green-16",
@@ -1128,6 +1141,7 @@ const bCardMap = {
     "b29": "green-22",
     "b30": "green-23",
 
+    // 蓝牌 blue-36 ~ blue-45
     "b31": "blue-36",
     "b32": "blue-37",
     "b33": "blue-38",
@@ -1147,15 +1161,82 @@ const bCardMap = {
     "b45": "wild",
     "b46": "wild4"
 };
-const unoDeck = [
-    ...Array.from({length:10}, (_,i)=>`red-${String(i+1).padStart(2, '0')}`),
-    ...Array.from({length:10}, (_,i)=>`yellow-${25+i}`),
-    ...Array.from({length:10}, (_,i)=>`green-${14+i}`),
-    ...Array.from({length:10}, (_,i)=>`blue-${36+i}`),
-    "yellow-draw2","red-draw2","green-draw2","blue-draw2",
-   "wild","wild4"
-];
 
+// ===================== 2. 核心渲染函数（修复路径问题） =====================
+function convertBCodeToCard(bCode) {
+    if (!/^b\d+$/.test(bCode)) {
+        console.warn("无效的b开头编码：", bCode);
+        return null;
+    }
+    const cardName = bCardMap[bCode];
+    if (!unoDeck.includes(cardName)) {
+        console.error(`卡牌 ${cardName} 不在 unoDeck 中！请检查映射`);
+        return null;
+    }
+    return cardName;
+}
+
+function renderBCard(bCode, containerId) {
+    const cardName = convertBCodeToCard(bCode);
+    if (!cardName) return;
+
+    const container = document.getElementById(containerId);
+    if (!container) {
+        console.warn(`容器 ${containerId} 不存在`);
+        return;
+    }
+
+    // 移除旧的同id卡牌，避免重复
+    const oldCard = document.getElementById(`card-${bCode}`);
+    if (oldCard) oldCard.remove();
+
+    const cardEl = document.createElement("div");
+    cardEl.className = "card";
+    cardEl.id = `card-${bCode}`;
+    // 关键：确保路径是 images/xxx.png，且和实际文件名完全一致
+    const imgUrl = `images/${cardName}.png`;
+    cardEl.style.backgroundImage = `url(${imgUrl})`;
+    cardEl.style.width = "94.6px";
+    cardEl.style.height = "148.5px";
+    cardEl.style.borderRadius = "10px";
+    cardEl.style.border = "2px solid #fff";
+    cardEl.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)";
+    cardEl.style.backgroundSize = "cover";
+    cardEl.style.backgroundPosition = "center";
+    cardEl.style.backgroundColor = "#fff";
+
+    // 加载失败时的兜底处理（显示错误提示）
+    cardEl.onerror = function() {
+        this.style.backgroundImage = "";
+        this.style.backgroundColor = "#ffeeee";
+        this.innerHTML = `<span style="font-size:12px;color:red;">加载失败</span>`;
+        console.error(`图片加载失败: ${imgUrl}`);
+    };
+
+    container.appendChild(cardEl);
+    console.log(`成功渲染 ${bCode} → ${cardName} (路径: ${imgUrl})`);
+    return cardEl;
+}
+
+// ===================== 3. 整合到现有手牌逻辑 =====================
+function addBCardToHand(bCode) {
+    const cardName = convertBCodeToCard(bCode);
+    if (!cardName) return;
+
+    playerHand.push(cardName);
+    localStorage.setItem("playerHand", JSON.stringify(playerHand));
+    renderHand(); // 重新渲染手牌
+    console.log(`已添加卡牌 ${bCode} → ${cardName} 到手牌`);
+}
+
+// ===================== 4. 测试函数：直接在控制台调用验证 =====================
+function testRenderBCard() {
+    // 测试 b6 对应 red-06，确保和你截图里的 #b6 一致
+    renderBCard("b6", "playerHand");
+    // 测试万能牌 b45
+    renderBCard("b45", "playerHand");
+    console.log("测试完成，请检查Network面板和页面");
+}
 let currentNfcCode = "";
 let pendingNfcCode = "";
 let playerHand = [];
